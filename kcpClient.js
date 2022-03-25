@@ -192,7 +192,14 @@ class KcpClient {
     // } else {
     //   console.error('server heartbeat timeout');
     // }
-    this.kcpobj.release();
+    try {
+      this.client.disconnect();
+    } catch (error) {
+    }
+    try {
+      this.kcpobj.release();
+    } catch (error) {
+    }
     this.init(this.opts);
   };
   
