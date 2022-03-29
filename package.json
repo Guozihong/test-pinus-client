@@ -1,10 +1,13 @@
 {
-  "name": "kcpclient",
+  "name": "pinus-client",
   "version": "0.0.1",
   "private": false,
   "dependencies": {
     "pomelo-protocol": "0.1.6",
     "node-kcp-x": "^1.0",
     "pomelo-node-client": "^1.1.1"
+  },
+  "scripts": {
+    "start": "node --inspect app.js"
   }
 }

@@ -45,11 +45,6 @@ class KcpClient {
     this.client = dgram.createSocket("udp4");
     this.client.on("message", function (msg, rinfo) {
       self.kcpobj.input(msg);
-      var data = self.kcpobj.recv();
-      console.log('on message', data);
-      if (data) {
-        self.processPackage(Package.decode(data));
-      }
     });
   
     var conv = opts.conv || 123;
@@ -88,11 +83,16 @@ class KcpClient {
   
   
   check () {
-    var self = this;
-    this.kcpobj.update(Date.now());
-    setTimeout(function () {
-      self.check();
-    }, this.kcpobj.check(Date.now()));
+    const now = Date.now();
+    this.kcpobj.update(now);
+
+    // 消息派发
+    var data;
+    while ((data = this.kcpobj.recv()) && data) {
+      this.processPackage(Package.decode(data));
+    }
+    
+    setTimeout(() => this.check(), this.kcpobj.check(now));
   };
   
   send (data) {
@@ -192,6 +192,11 @@ class KcpClient {
     // } else {
     //   console.error('server heartbeat timeout');
     // }
+    console.error('server heartbeat timeout');
+    this.client.emit('heartbeatTimeout');
+  };
+  
+  disconnect() {
     try {
       this.client.disconnect();
     } catch (error) {
@@ -200,9 +205,8 @@ class KcpClient {
       this.kcpobj.release();
     } catch (error) {
     }
-    this.init(this.opts);
-  };
-  
+  }
+
   processPackage (msgs) {
     if (Array.isArray(msgs)) {
       for (var i = 0; i < msgs.length; i++) {

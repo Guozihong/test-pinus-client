@@ -1,4 +1,4 @@
 udpclient
 =========
 
-udp client demo for pomelo
+udp client demo for pinus

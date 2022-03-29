@@ -8,7 +8,7 @@ kcpClient.init({
     port: 3010,
     conv: 112233,
     nodelay: 1,
-    interval: 10,
+    interval: 20,
     resend: 2,
     nc: 1
 }, function () {
@@ -22,6 +22,10 @@ kcpClient.init({
 
     kcpClient.client.on('onChat', function (msg) {
         console.log('onChat receive message: %j', msg);
+    });
+
+    kcpClient.client.on('heartbeatTimeout', function (msg) {
+        console.log('heartbeatTimeout: %j', msg);
     });
 
     function request() {
