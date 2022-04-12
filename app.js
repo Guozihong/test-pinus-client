@@ -2,10 +2,18 @@ const PomeloClient = require('pomelo-node-client');
 const KcpClient = require('./kcpClient');
 const UdpClient = require('./udpClient');
 
+let n = 0;
+function getRandHost() {
+    let hosts = [
+        { host: '118.25.97.56', port: 3010 },
+        { host: '127.0.0.1', port: 3010 },
+    ];
+    return hosts[Math.floor(Math.random() * hosts.length)];
+}
+
 let kcpClient = new KcpClient();
 kcpClient.init({ 
-    host: '127.0.0.1',
-    port: 3010,
+    ...getRandHost(),
     conv: 112233,
     nodelay: 1,
     interval: 20,
@@ -35,12 +43,20 @@ kcpClient.init({
         });
     }
     setInterval(() => {
-        request();
-    }, 3000);
+        n ++;
+        if (n % 5 === 0) {
+            kcpClient.changeClientConfig(getRandHost(), () => {
+                console.log('连接切换成功！');
+                request();
+            });
+        } else {
+            request();
+        }
+    }, 5000);
 });
 
 // let udpClient = new UdpClient();
-// udpClient.init('localhost', 3010, function() {
+// udpClient.init('118.25.97.56', 3010, function() {
 //     udpClient.request('connector.entryHandler.entry', {username:'py', rid:'1', route:'connector.entryHandler.entry'}, function(data) {
 //       console.log('receive enter callback data: %j', data);
 //       /**
@@ -61,9 +77,9 @@ kcpClient.init({
 //     udpClient.client.on('onChat', function(msg) {
 //       console.log('onChat receive message: %j', msg);
 //     });
-//   });
+// });
 
 // var pomeloInstance = new PomeloClient();
-// pomeloInstance.init({ host: 'localhost', port: 3010 }, () => {
+// pomeloInstance.init({ host: '118.25.97.56', port: 3010 }, () => {
 //   console.log('init finished');
 // });

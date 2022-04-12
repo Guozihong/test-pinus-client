@@ -36,51 +36,56 @@ class KcpClient {
   opts = {};
 
   init (opts, cb) {
+    this.handlers[Package.TYPE_HANDSHAKE] = this.handshake.bind(this);
+    this.handlers[Package.TYPE_HEARTBEAT] = this.heartbeat.bind(this);
+    this.handlers[Package.TYPE_DATA] = this.onData.bind(this);
+    this.handlers[Package.TYPE_KICK] = this.onKick.bind(this);
+
+    this.createClient(opts, cb);
+    this.check();
+  };
+
+  createClient(opts, cb) {
     this.connectedCb = cb;
     this.opts = opts;
     this.host = opts.host;
     this.port = opts.port;
-
-    var self = this;
     this.client = dgram.createSocket("udp4");
-    this.client.on("message", function (msg, rinfo) {
-      self.kcpobj.input(msg);
+    this.client.on("message", (msg, rinfo) => {
+      this.kcpobj.input(msg);
     });
-  
+
     var conv = opts.conv || 123;
     this.kcpobj = new kcp.KCP(conv, opts);
-  
+
     var nodelay = opts.nodelay || 0;
     var interval = opts.interval || 100;
     var resend = opts.resend || 0;
     var nc = opts.nc || 0;
     this.kcpobj.nodelay(nodelay, interval, resend, nc);
-  
+
     var sndwnd = opts.sndwnd || 32;
     var rcvwnd = opts.rcvwnd || 32;
     this.kcpobj.wndsize(sndwnd, rcvwnd);
-  
+
     var mtu = opts.mtu || 1400;
     this.kcpobj.setmtu(mtu);
-  
+
     this.kcpobj.output((data, size, context) => {
-      self.client.send(data, 0, size, context.port, context.host, function (err, bytes) {
+      this.client.send(data, 0, size, context.port, context.host, function (err, bytes) {
         if (!!err) {
           console.error('udp client send message with error: %j', err.stack);
         }
       });
     });
 
-    this.handlers[Package.TYPE_HANDSHAKE] = this.handshake.bind(this);
-    this.handlers[Package.TYPE_HEARTBEAT] = this.heartbeat.bind(this);
-    this.handlers[Package.TYPE_DATA] = this.onData.bind(this);
-    this.handlers[Package.TYPE_KICK] = this.onKick.bind(this);
-  
-    this.check();
-  
     this.sendHandshake();
-  };
-  
+  }
+
+  changeClientConfig(opts, cb) {
+    console.log('设置host,port', opts);
+    this.createClient(Object.assign(this.opts, opts), cb);
+  }
   
   check () {
     const now = Date.now();
@@ -91,7 +96,7 @@ class KcpClient {
     while ((data = this.kcpobj.recv()) && data) {
       this.processPackage(Package.decode(data));
     }
-    
+
     setTimeout(() => this.check(), this.kcpobj.check(now));
   };
   
