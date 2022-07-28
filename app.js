@@ -5,7 +5,7 @@ const UdpClient = require('./udpClient');
 let n = 0;
 function getRandHost() {
     let hosts = [
-        { host: '118.25.97.56', port: 3010 },
+        { host: '127.0.0.1', port: 3011 },
         { host: '127.0.0.1', port: 3010 },
     ];
     return hosts[Math.floor(Math.random() * hosts.length)];
